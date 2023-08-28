@@ -1,0 +1,10 @@
+
+#ifndef ERROR_DEFINITIONS_H
+#define ERROR_DEFINITIONS_H
+
+#define ERR_DEF_OKAY (0)
+#define ERR_DEF_INVALID_ARGV (1)
+#define ERR_DEF_NOT_ENOUGH (2)
+
+#endif // !ERROR_DEFINITIONS_H
+
