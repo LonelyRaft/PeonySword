@@ -1,125 +1,104 @@
 
 #include "actor.h"
+#include "position.h"
+#include "keyboard.h"
+#include <iostream>
+#include <string>
+#include <mutex>
 
-namespace PeonySword
-{
-	Point::Point(double _x, double _y, double _z)
-	{
-		x = _x;
-		y = _y;
-		z = _z;
-	}
+namespace PeonySword {
+    class ActorData {
+        friend class Actor;
 
-	Point::~Point()
-	{
-	}
+        int mID = 0;
+        Position mPos;
+        std::string mName = "default";
+        static std::mutex sMutID;
+        static int sActorCounter;
 
-	Point& Point::operator+=(const Point& _point)
-	{
-		x += _point.x;
-		y += _point.y;
-		z += _point.z;
-		return (*this);
-	}
+        static int allocID();
 
-	Point operator+(
-		const Point& _point1,
-		const Point& _point2)
-	{
-		Point p;
-		p.x = _point1.x + _point1.x;
-		p.y = _point1.y + _point2.y;
-		p.z = _point1.z + _point2.z;
-		return p;
-	}
+    public:
+        explicit ActorData();
 
-	Actor::Actor(
-		const Point& _pos,
-		const std::string& _name)
-	{
-		pos = _pos;
-		name = _name;
-	}
+        explicit ActorData(const std::string &_name);
 
-	Actor::~Actor()
-	{
-		for (auto wp : wps) {
-			delete wp;
-		}
-		for (auto skill : skills) {
-			delete skill;
-		}
-	}
+        virtual ~ActorData() = default;
 
-	const FightAttrs& PeonySword::Actor::readAttrs() const
-	{
-		return attrs;
-	}
+        friend std::ostream &operator<<(std::ostream &, const ActorData &);
+    };
 
-	void Actor::attack(Actor* _enemy)
-	{
-		if (_enemy == nullptr) {
-			return;
-		}
-		FightAttrs& _attrs = _enemy->attrs;
-		_attrs.CH -= attrs.A;
-		// ÎüÑª
-		// attrs.CH += (attrs.A * 10%);
-	}
+    ActorData::ActorData() {
+        mID = allocID();
+    }
 
-	void Actor::attack(std::vector<Actor*> _enemies)
-	{
-		for (auto enemy : _enemies) {
-			attack(enemy);
-		}
-	}
+    ActorData::ActorData(const std::string &_name) :
+            mName(_name) {
+        mID = allocID();
+    }
 
-	void Actor::useSkill(int _idx, Actor* _actor)
-	{
-		if (_actor == nullptr) {
-			return;
-		}
-		skills[_idx]->function(_actor);
-	}
+    std::ostream &operator<<(std::ostream &out, const ActorData &_data) {
+        out << R"({"id":)" << _data.mID
+            << R"(, "name":")" << _data.mName
+            << R"(", position:[)"
+            << _data.mPos.mPosX << ", "
+            << _data.mPos.mPosY << ", "
+            << _data.mPos.mPosZ << "]}";
+        return out;
+    }
 
-	void Actor::useSkill(int _idx, std::vector<Actor*> _actors)
-	{
-	}
+    std::mutex ActorData::sMutID;
+    int ActorData::sActorCounter;
 
-	void Actor::move(const Point& _offset)
-	{
-		pos += _offset;
-	}
+    int ActorData::allocID() {
+        std::lock_guard lock(sMutID);
+        ++sActorCounter;
+        return sActorCounter;
+    }
 
-	void Actor::moveTo(const Point& _dest)
-	{
-		pos = _dest;
-	}
+    Actor::Actor() {
+        subscribeKeyEvent(this);
+        pd = new ActorData;
+    }
 
-	void Actor::fly(const Point& _offset)
-	{
-	}
+    Actor::Actor(const std::string &_name) {
+        subscribeKeyEvent(this);
+        pd = new ActorData(_name);
+    }
 
-	void Actor::flyTo(const Point& _dest)
-	{
-	}
+    Actor::~Actor() {
+        unsubscribeKeyEvent(this);
+        if (pd != nullptr) {
+            delete pd;
+            pd = nullptr;
+        }
+    }
 
-	std::ostream& operator<<(
-		std::ostream& _os, const Point& _point)
-	{
-		_os << "Point(" << _point.x
-			<< ", " << _point.y
-			<< ", " << _point.z << ");";
-		return _os;
-	}
+    void Actor::moveTo(double _x, double _y, double _z) {
+        pd->mPos.moveTo(_x, _y, _z);
+    }
 
-	std::ostream& operator<<(
-		std::ostream& _os, const Actor& _actor)
-	{
-		_os << _actor.name
-			<< "{" << _actor.pos
-			<< ", " << _actor.attrs << "}";
-		return _os;
-	}
+    void Actor::move(double _x, double _y, double _z) {
+        pd->mPos.move(_x, _y, _z);
+    }
+
+    void Actor::showInfo() {
+        std::cout << "Actor:" << *pd << std::endl;
+    }
+
+    void Actor::changeName(const std::string &_newName) {
+        pd->mName = _newName;
+    }
+
+    std::string Actor::actorName() const {
+        return pd->mName;
+    }
+
+    void Actor::keyReleaseEvent(const KeyEvent &e) {
+        std::cout << __FUNCTION__ << std::endl;
+    }
+
+    void Actor::keyPressEvent(const KeyEvent &e) {
+        std::cout << __FUNCTION__ << std::endl;
+    }
 }
-

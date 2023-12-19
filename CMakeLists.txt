@@ -1,14 +1,14 @@
-﻿cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 
-project ("CMakeProject1")
+set(PEONYSWORD "PeonySword")
 
+project(${PEONYSWORD} LANGUAGES CXX)
 
-set(TARGETNAME "target")
+add_executable(${PEONYSWORD} "")
 
-add_executable(${TARGETNAME} "")
-
-file(GLOB TARGET_SRCS *.h *.cpp *.c)
+file(GLOB PEONYSWORD_SRCS *.cpp *.h)
 target_sources(
-	${TARGETNAME} PRIVATE
-	${TARGET_SRCS}
+        ${PEONYSWORD} PRIVATE
+        ${PEONYSWORD_SRCS}
 )
+
