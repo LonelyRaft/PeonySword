@@ -2,8 +2,7 @@
 #define PEONYSWORD_ACTOR_H
 
 #include <string>
-#include "event.h"
-
+#include "keyboard.h"
 
 namespace PeonySword {
     class ActorData;
