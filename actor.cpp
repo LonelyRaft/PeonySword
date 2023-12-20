@@ -95,10 +95,12 @@ namespace PeonySword {
     }
 
     void Actor::keyReleaseEvent(const KeyEvent &e) {
-        std::cout << __FUNCTION__ << std::endl;
+        std::cout << __FUNCTION__ << "\t"
+                  << (int) e.mKeyValue << std::endl;
     }
 
     void Actor::keyPressEvent(const KeyEvent &e) {
-        std::cout << __FUNCTION__ << std::endl;
+        std::cout << __FUNCTION__ << "\t"
+                  << (int) e.mKeyValue << std::endl;
     }
 }
