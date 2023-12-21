@@ -10,6 +10,14 @@ namespace PeonySword {
 
     class KeyboardLinux : public Keyboard {
     public:
+        KeyboardLinux(const KeyboardLinux&) = delete;
+
+        KeyboardLinux(KeyboardLinux&&) = delete;
+
+        KeyboardLinux& operator=(const KeyboardLinux&) = delete;
+
+        KeyboardLinux& operator=(KeyboardLinux&&) = delete;
+
         static bool readline(int _fd, std::string &_line);
 
         static int scan_keyboard(std::string &_event);
@@ -94,16 +102,15 @@ namespace PeonySword {
                 keyEvent.mKeyValue = toKeyValue(event.code);
                 if (event.value == 0) {
                     keyEvent.mKeyState = KeyStateUp;
-                    std::lock_guard lock(sDataLock);
-                    sData[keyEvent.mKeyValue].mKeeping = false;
-                } else {
+                } else if(event.value == 1){
                     keyEvent.mKeyState = KeyStateDown;
+                } else {
+                    // event.value == 2
+                    keyEvent.mKeyState = KeyStateKeep;
                     std::lock_guard lock(sDataLock);
-                    if (!sData[keyEvent.mKeyValue].mKeepEnable &&
-                        sData[keyEvent.mKeyValue].mKeeping) {
+                    if (!sData[keyEvent.mKeyValue].mKeepEnable) {
                         continue;
                     }
-                    sData[keyEvent.mKeyValue].mKeeping = true;
                 }
                 if (keyEvent.mKeyState != KeyStateInvalid) {
                     sEventQueue.emplace(keyEvent);

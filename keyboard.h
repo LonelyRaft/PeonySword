@@ -101,13 +101,13 @@ namespace PeonySword {
         KeyStateInvalid,
         KeyStateDown,
         KeyStateUp,
+        KeyStateKeep,
     };
 
     class KeyEvent {
     public:
         KeyEvent() = default;
 
-        std::chrono::milliseconds mStamp{};
         KeyValue mKeyValue = KeyValueInvalid;
         KeyState mKeyState = KeyStateInvalid;
 

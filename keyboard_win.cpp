@@ -7,6 +7,14 @@
 namespace PeonySword {
     class KeyboardWin : public Keyboard {
     public:
+        KeyboardWin(const KeyboardWin &) = delete;
+
+        KeyboardWin(KeyboardWin &&) = delete;
+
+        KeyboardWin &operator=(const KeyboardWin &) = delete;
+
+        KeyboardWin &operator=(KeyboardWin &&) = delete;
+
         static LRESULT CALLBACK cbKeyboard(
                 int, WPARAM, LPARAM);
     };
@@ -19,26 +27,22 @@ namespace PeonySword {
         }
         KBDLLHOOKSTRUCT *event = (KBDLLHOOKSTRUCT *) lParam;
         KeyEvent keyEvent;
-        duration currStamp = system_clock::now().time_since_epoch();
-        keyEvent.mStamp = duration_cast<milliseconds>(currStamp);
         keyEvent.mKeyValue = toKeyValue((int) event->vkCode);
         keyEvent.mKeyState = KeyStateInvalid;
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
             keyEvent.mKeyState = KeyStateDown;
-            {
-                std::lock_guard lock(sDataLock);
-                if (!sData[keyEvent.mKeyValue].mKeepEnable &&
-                    sData[keyEvent.mKeyValue].mKeeping) {
+            std::lock_guard lock(sDataLock);
+            if (sData[keyEvent.mKeyValue].mKeeping) {
+                keyEvent.mKeyState = KeyStateKeep;
+                if (!sData[keyEvent.mKeyValue].mKeepEnable) {
                     return CallNextHookEx(nullptr, code, wParam, lParam);
                 }
-                sData[keyEvent.mKeyValue].mKeeping = true;
             }
+            sData[keyEvent.mKeyValue].mKeeping = true;
         } else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
             keyEvent.mKeyState = KeyStateUp;
-            {
-                std::lock_guard lock(sDataLock);
-                sData[keyEvent.mKeyValue].mKeeping = false;
-            }
+            std::lock_guard lock(sDataLock);
+            sData[keyEvent.mKeyValue].mKeeping = false;
         }
         if (keyEvent.mKeyState != KeyStateInvalid) {
             sEventQueue.emplace(keyEvent);

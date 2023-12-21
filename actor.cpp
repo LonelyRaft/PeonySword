@@ -95,6 +95,9 @@ namespace PeonySword {
     }
 
     void Actor::keyReleaseEvent(const KeyEvent &e) {
+        if (e.mKeyState == KeyStateKeep) {
+            return;
+        }
         std::cout << __FUNCTION__ << "\t"
                   << (int) e.mKeyValue << std::endl;
     }
