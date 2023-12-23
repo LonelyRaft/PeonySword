@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 #include "clog.h"
 #include "clog_data.h"
 #include <ctype.h>
@@ -210,3 +212,5 @@ void clog_desrtroy(clog_t *_log) {
     free(_log);
     _log = NULL;
 }
+
+#endif // __linux__

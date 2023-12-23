@@ -135,22 +135,12 @@ char *clog_gen_path(clog_t *_log) {
     return _log->m_path;
 }
 
-void *clog_lock_create(void *_addr) {
-    (void) _addr;
-    return CreateMutex(NULL, FALSE, NULL);
-}
-
 void clog_lock(clog_t *_log) {
     WaitForSingleObject(_log->m_lock, INFINITE);
 }
 
 void clog_unlock(clog_t *_log) {
     ReleaseMutex(_log->m_lock);
-}
-
-void clog_lock_destroy(clog_t *_log) {
-    CloseHandle(_log->m_lock);
-    _log->m_lock = NULL;
 }
 
 int clog_datetime(char *_datetime) {
@@ -183,7 +173,7 @@ clog_t *clog_create(int _msgsz_max) {
     log->m_msgbuf = addr;
     log->config.level = CLOG_LEVEL_DEBUG;
     log->config.msgsize = _msgsz_max;
-    log->m_lock = clog_lock_create(NULL);
+    log->m_lock = CreateMutexA(NULL, FALSE, NULL);
     if (log->m_lock == NULL) {
         free(log);
         addr = NULL;
@@ -210,7 +200,8 @@ void clog_desrtroy(clog_t *_log) {
         free(_log->m_path);
     }
     _log->m_path = NULL;
-    clog_lock_destroy(_log);
+    CloseHandle(_log->m_lock);
+    _log->m_lock = NULL;
     free(_log);
     _log = NULL;
 }
