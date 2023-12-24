@@ -6,7 +6,7 @@ project(${PEONYSWORD} LANGUAGES CXX)
 
 add_executable(${PEONYSWORD} "")
 
-file(GLOB PEONYSWORD_SRCS *.cpp *.h)
+file(GLOB PEONYSWORD_SRCS *.c *.cpp *.h)
 target_sources(
         ${PEONYSWORD} PRIVATE
         ${PEONYSWORD_SRCS}

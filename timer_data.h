@@ -1,16 +1,20 @@
 #ifndef PEONYSWORD_TIMER_DATA_H
 #define PEONYSWORD_TIMER_DATA_H
 
+#include <functional>
+#include <utility>
+
 namespace PeonySword {
     class TimeoutRoutine {
     public:
-        void (*mRoutine)(void *) = nullptr;
+
+        std::function<void(void *)> mRoutine;
 
         void *mParam = nullptr;
 
         TimeoutRoutine() = default;
 
-        TimeoutRoutine(void (*_routine)(void *), void *_param) :
+        TimeoutRoutine(const std::function<void(void *)> &_routine, void *_param) :
                 mRoutine(_routine), mParam(_param) {}
     };
 
@@ -36,7 +40,7 @@ namespace PeonySword {
 
         virtual void setPeriod(unsigned int _milli_secs) = 0;
 
-        virtual void addRoutine(void(*_timeout)(void *), void *_arg) = 0;
+        virtual void addRoutine(const std::function<void(void *)> &, void *arg) = 0;
     };
 
     extern TimerData *createTimerData();

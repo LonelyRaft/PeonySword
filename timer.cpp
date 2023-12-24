@@ -32,7 +32,7 @@ namespace PeonySword {
         pd->setPeriod(_milli_secs);
     }
 
-    void Timer::addRoutine(void (*_timeout)(void *), void *_arg) {
-        pd->addRoutine(_timeout, _arg);
+    void Timer::addRoutine(const std::function<void(void *)> &_func, void *_arg) {
+        pd->addRoutine(_func, _arg);
     }
 }
