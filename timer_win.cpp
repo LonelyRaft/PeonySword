@@ -119,7 +119,11 @@ namespace PeonySword {
 
     VOID CALLBACK TimerDataWin::TimeoutRoutineExec(
             PVOID _param, BOOLEAN) {
-        TimerDataWin *timer = static_cast<TimerDataWin *>(_param);
+        TimerDataWin *timer =
+                static_cast<TimerDataWin *>(_param);
+        if (timer == nullptr) {
+            return;
+        }
         auto it = timer->mRoutines.cbegin();
         while (it != timer->mRoutines.cend()) {
             it->mRoutine(it->mParam);
