@@ -7,6 +7,9 @@
 #include "actor.h"
 #include "timer.h"
 
+void callFunction(void(*_func)(void *), void *_obj, void *arg) {
+
+}
 
 class Ademo {
     PeonySword::Timer *timer = nullptr;
@@ -26,13 +29,13 @@ void Ademo::callback(void *) {
 
 Ademo::Ademo() {
     timer = new PeonySword::Timer;
-    if (timer != nullptr) {
-        timer->setPeriod(10000);
-        timer->addRoutine([this](void *arg) {
-            this->callback(arg);
-        }, nullptr);
-        timer->start();
-    }
+    timer->setPeriod(10000);
+    timer->addRoutine(
+            "callback",
+            [this](void *arg) {
+                this->callback(arg);
+            });
+    timer->start();
 }
 
 Ademo::~Ademo() {
@@ -57,7 +60,7 @@ int main(int argc, char *argv[]) {
     setKeepEnable(KeyValueRightCtrl, false);
     setKeepEnable(KeyValueRightAlt, false);
     Timer *timer = new Timer(5000);
-    timer->addRoutine(sayHello, nullptr);
+    timer->addRoutine("sayHello", sayHello, nullptr);
     timer->start();
     Actor *actor = new Actor;
     actor->changeName("DemoName");

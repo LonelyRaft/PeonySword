@@ -3,10 +3,12 @@
 
 #include <functional>
 #include <utility>
+#include <string>
 
 namespace PeonySword {
     class TimeoutRoutine {
     public:
+        std::string mName;
 
         std::function<void(void *)> mRoutine;
 
@@ -14,8 +16,11 @@ namespace PeonySword {
 
         TimeoutRoutine() = default;
 
-        TimeoutRoutine(const std::function<void(void *)> &_routine, void *_param) :
-                mRoutine(_routine), mParam(_param) {}
+        TimeoutRoutine(
+                const std::string &_name,
+                const std::function<void(void *)> &_routine,
+                void *_param) :
+                mName(_name), mRoutine(_routine), mParam(_param) {}
     };
 
     class TimerData {
@@ -40,7 +45,12 @@ namespace PeonySword {
 
         virtual void setPeriod(unsigned int _milli_secs) = 0;
 
-        virtual void addRoutine(const std::function<void(void *)> &, void *arg) = 0;
+        virtual void addRoutine(
+                const std::string &_name,
+                const std::function<void(void *)> &_func,
+                void *arg) = 0;
+
+        virtual void rmRoutine(const std::string &_name) = 0;
     };
 
     extern TimerData *createTimerData();

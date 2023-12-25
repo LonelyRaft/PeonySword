@@ -2,6 +2,7 @@
 #define PEONYSWORD_TIMER_H
 
 #include <functional>
+#include <string>
 
 namespace PeonySword {
     class TimerData;
@@ -31,7 +32,12 @@ namespace PeonySword {
 
         void setPeriod(unsigned int _milli_secs);
 
-        void addRoutine(const std::function<void(void *)>&, void *);
+        void addRoutine(
+                const std::string &_name,
+                const std::function<void(void *)> & _func,
+                void * _arg = nullptr);
+
+        void rmRoutine(const std::string &_name);
     };
 }
 

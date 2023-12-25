@@ -53,7 +53,12 @@ namespace PeonySword {
 
         void setPeriod(unsigned int _period) override;
 
-        void addRoutine(const std::function<void(void *)> &_routine, void *_arg) override;
+        void rmRoutine(const std::string &_name) override;
+
+        void addRoutine(
+                const std::string &_name,
+                const std::function<void(void *)> &_routine,
+                void *_arg) override;
     };
 
     int TimerDataWin::start() {
@@ -87,8 +92,6 @@ namespace PeonySword {
         }
         CloseHandle(waitEvent);
         mTimer = nullptr;
-        mRoutines.clear();
-        mPeriod = DefaultPeriod;
         return 0;
     }
 
@@ -101,12 +104,15 @@ namespace PeonySword {
     }
 
     void TimerDataWin::addRoutine(
-            const std::function<void(void *)> &_routine, void *_arg) {
-        if (!_routine.operator bool()) {
+            const std::string &_name,
+            const std::function<void(void *)> &_routine,
+            void *_arg) {
+        if (_name.empty() ||
+            !_routine.operator bool()) {
             return;
         }
-        TimeoutRoutine r(_routine, _arg);
-        mRoutines.emplace_back(r);
+        TimeoutRoutine r(_name, _routine, _arg);
+        mRoutines.emplace_back(std::move(r));
     }
 
     TimerQueueWin TimerDataWin::TimerQueue;
@@ -138,6 +144,20 @@ namespace PeonySword {
         }
         CloseHandle(waitEvent);
         mTimer = nullptr;
+    }
+
+    void TimerDataWin::rmRoutine(const std::string &_name) {
+        if (_name.empty()) {
+            return;
+        }
+        auto it = mRoutines.cbegin();
+        while (it != mRoutines.cend()) {
+            if (it->mName == _name) {
+                mRoutines.erase(it);
+                continue;
+            }
+            ++it;
+        }
     }
 
     TimerData *createTimerData() {
