@@ -8,7 +8,7 @@ namespace PeonySword {
     class TimerData;
 
     class Timer {
-        TimerData *pd;
+        TimerData *pd = nullptr;
     public:
         Timer();
 
@@ -24,20 +24,24 @@ namespace PeonySword {
 
         Timer &operator=(Timer &&) = delete;
 
-        int start();
+        void setOnceFlag(bool _flag);
 
-        int stop();
-
-        bool isActive();
+        [[nodiscard]] bool onceFlag() const;
 
         void setPeriod(unsigned int _milli_secs);
 
         void addRoutine(
                 const std::string &_name,
-                const std::function<void(void *)> & _func,
-                void * _arg = nullptr);
+                const std::function<void(void *)> &_func,
+                void *_arg = nullptr);
 
         void rmRoutine(const std::string &_name);
+
+        int start();
+
+        int stop();
+
+        [[nodiscard]] bool isActive() const;
     };
 }
 

@@ -9,17 +9,22 @@
 
 
 namespace PeonySword {
+    class TimerSignalLinux {
+    public:
+        sigevent mSigEvent;
+        TimerSignalLinux() {
+
+        }
+
+        ~TimerSignalLinux() = default;
+    };
     class TimerDataLinux
             : public TimerData {
-        timer_t mTimer = nullptr;
-        sigevent mSigEvent;
-        itimerspec mPeriod =
-                {{0, 0},
-                 {0, 0}
-                };
-        std::list<TimeoutRoutine> mRoutines;
-
+        static TimerSignalLinux mSigEvent;
         static void processRoutines(sigval);
+
+        bool mRunning = false;
+        timer_t mTimer = nullptr;
 
     public:
 
@@ -31,30 +36,37 @@ namespace PeonySword {
 
         int stop() override;
 
-        bool isActive() override;
-
-        void setPeriod(unsigned int _milli_secs) override;
-
-        void addRoutine(
-                const std::string &_name,
-                const std::function<void(void *)> &_func,
-                void *arg) override;
-
-        void rmRoutine(const std::string &_name) override;
+        [[nodiscard]] bool isActive() const override;
     };
 
     int TimerDataLinux::start() {
-
-        return 0;
+        if(mOnce) {
+            mPeriod.it_interval.tv_sec = 0;
+            mPeriod.it_interval.tv_nsec = 0;
+        }
+        int ret = timer_settime(
+                mTimer, TIMER_ABSTIME, &mPeriod, nullptr);
+        if(ret < 0) {
+            ret = errno;
+        }
+        return ret;
     }
 
     int TimerDataLinux::stop() {
-        return 0;
+        if(mTimer == nullptr) {
+            return 0;
+        }
+        itimespec stop_its;
+        int ret = timer_settime(
+                mTimer, TIMER_ABSTIME, &stop_its, nullptr);
+        if(ret < 0){
+            ret = errno;
+        }
+        return ret;
     }
 
-    bool TimerDataLinux::isActive() {
-
-        return false;
+    bool TimerDataLinux::isActive() const {
+        return mRunning;
     }
 
     void TimerDataLinux::setPeriod(
@@ -63,32 +75,6 @@ namespace PeonySword {
         _milli_secs %= 1000;
         mPeriod.it_value.tv_nsec = _milli_secs * 1000;
         mPeriod.it_interval = mPeriod.it_value;
-    }
-
-    void TimerDataLinux::addRoutine(
-            const std::string &_name,
-            const std::function<void(void *)> &_func,
-            void *arg) {
-        if (_name.empty() ||
-            !_func.operator bool()) {
-            return;
-        }
-        TimeoutRoutine r(_name, _func, arg);
-        mRoutines.emplace_back(std::move(r));
-    }
-
-    void TimerDataLinux::rmRoutine(const std::string &_name) {
-        if (_name.empty()) {
-            return;
-        }
-        auto it = mRoutines.cbegin();
-        while (it != mRoutines.cend()) {
-            if (it->mName == _name) {
-                mRoutines.erase(it);
-                continue;
-            }
-            ++it;
-        }
     }
 
     TimerDataLinux::TimerDataLinux() {
@@ -108,10 +94,12 @@ namespace PeonySword {
         if (timer_delete(mTimer)) {
             // log errno
         }
+        mTimer = nullptr;
+        mRunning = false;
     }
 
     void TimerDataLinux::processRoutines(sigval arg) {
-        TimerDataLinux *timer =
+        auto *timer =
                 static_cast<TimerDataLinux *>(arg.sival_ptr);
         if (timer == nullptr) {
             return;
@@ -122,6 +110,8 @@ namespace PeonySword {
             ++it;
         }
     }
+
+    TimerSignalLinux TimerDataLinux::mSigEvent;
 
     TimerData *createTimerData() {
         return new TimerDataLinux;

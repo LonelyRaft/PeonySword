@@ -4,6 +4,7 @@
 #include <functional>
 #include <utility>
 #include <string>
+#include <list>
 
 namespace PeonySword {
     class TimeoutRoutine {
@@ -24,6 +25,11 @@ namespace PeonySword {
     };
 
     class TimerData {
+    protected:
+        static const unsigned int DefaultPeriod = 1000;
+        bool mOnce = false;
+        size_t mPeriod = 1000;
+        std::list<TimeoutRoutine> mRoutines;
     public:
         TimerData() = default;
 
@@ -37,20 +43,24 @@ namespace PeonySword {
 
         virtual ~TimerData() = default;
 
+        void setOnceFlag(bool _flag);
+
+        [[nodiscard]] bool onceFlag() const;
+
+        void setPeriod(unsigned int _milli_secs);
+
         virtual int start() = 0;
 
         virtual int stop() = 0;
 
-        virtual bool isActive() = 0;
+        [[nodiscard]] virtual bool isActive() const = 0;
 
-        virtual void setPeriod(unsigned int _milli_secs) = 0;
-
-        virtual void addRoutine(
+        void addRoutine(
                 const std::string &_name,
                 const std::function<void(void *)> &_func,
-                void *arg) = 0;
+                void *arg);
 
-        virtual void rmRoutine(const std::string &_name) = 0;
+        void rmRoutine(const std::string &_name);
     };
 
     extern TimerData *createTimerData();
