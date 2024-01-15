@@ -38,6 +38,19 @@ static int clog_find_seq(clog_t *_log) {
             continue;
         }
         size_t length = strlen(d->d_name);
+        // backup log path
+        size_t path_len = _log->config.dir_len;
+        path_len += length;
+        path_len += 4;
+        char *path = (char *)malloc(path_len);
+        if (path == NULL) {
+            return 0;
+        }
+        memcpy(path, _log->config.directory,
+            _log->config.dir_len);
+        path[_log->config.dir_len] = 0;
+        strcat(path, d->d_name);
+        // check log path
         while (length > 0) {
             if (strcmp(d->d_name + length, ".log") == 0) {
                 d->d_name[length] = 0;
@@ -65,8 +78,20 @@ static int clog_find_seq(clog_t *_log) {
                 seq_str, &seq_ret, 10);
         if (seq_ret != NULL && seq_val > seq_num &&
             seq_val <= LOG_SEQ_MAX) {
+            int fd = open(path, O_RDONLY);
+            free(path);
+            path =  NULL;
+            if (fd > 0) {
+                struct stat f_state = {0};
+                fstat(fd, &f_state);
+                close(fd);
+                if (f_state.st_size >= LOG_SIZE_MAX) {
+                    continue;
+                }
+            }
             seq_num = (int) seq_val;
         }
+        free(path);
     }
     closedir(dir);
     return seq_num;
@@ -113,7 +138,7 @@ char *clog_gen_path(clog_t *_log) {
     if (size > LOG_SIZE_MAX) {
         ++config->sequence;
         if (config->sequence > LOG_SEQ_MAX) {
-            config->sequence = 0;
+            config->sequence = 1;
         }
         free(_log->m_path);
         _log->m_path = NULL;
