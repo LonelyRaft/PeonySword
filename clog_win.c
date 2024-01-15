@@ -50,8 +50,11 @@ static int clog_find_seq(clog_t *_log) {
         char *seq_str = NULL;
         int seq_val = strtol(
                 file.cFileName + length, &seq_str, 10);
+        size_t fsize = file.nFileSizeHigh;
+        fsize <<= 32;
+        fsize += file.nFileSizeLow;
         if (seq_str != NULL && seq_val > seq_num &&
-            seq_val <= LOG_SEQ_MAX) {
+            seq_val <= LOG_SEQ_MAX && fsize < LOG_SIZE_MAX) {
             seq_num = seq_val;
         }
     } while (FindNextFileA(hFind, &file));
@@ -102,7 +105,7 @@ char *clog_gen_path(clog_t *_log) {
     if (size > LOG_SIZE_MAX) {
         ++config->sequence;
         if (config->sequence > LOG_SEQ_MAX) {
-            config->sequence = 0;
+            config->sequence = 1;
         }
         free(_log->m_path);
         _log->m_path = NULL;
